@@ -7,9 +7,10 @@ const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('AuraSmpTR AFK Botu Aktif!'));
 app.listen(PORT, () => console.log(`Web sunucusu ${PORT} portunda çalışıyor.`));
 
-const SUNUCU_IP = 'ramp-lexington.tun.ply.gg'; // IP Adresini yaz
+// SUNUCU BİLGİLERİ
+const SUNUCU_IP = 'SUNUCU_IP_ADRESI'; // Buraya sunucu IP'ni yaz
 const SUNUCU_PORT = 25565;
-const BOT_SIFRE = 'AuraBot123456';
+const BOT_SIFRE = 'aurasmp123456';    // Tırnak içinde şifreniz
 
 function createBot() {
   console.log('Bota bağlanılıyor...');
@@ -27,24 +28,19 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('Bot sunucuya katıldı. Giriş bekleniyor...');
+    console.log('Bot sunucuya katıldı. Giriş yapılıyor...');
 
-    // Giriş yapana kadar hareketsiz kalsın
-    setTimeout(() => bot.chat(`/register ${aurasmp123456} ${aurasmp123456}`), 2000);
-    setTimeout(() => bot.chat(`/login ${aurasmp123456}`), 4000);
+    setTimeout(() => bot.chat(`/register ${BOT_SIFRE} ${BOT_SIFRE}`), 2000);
+    setTimeout(() => bot.chat(`/login ${BOT_SIFRE}`), 4000);
 
-    // Giriş yaptıktan 6 saniye sonra Anti-AFK başlat (GrimAC tetiklenmesin)
     setTimeout(() => {
       isLoggedIn = true;
       console.log('Giriş tamamlandı, Anti-AFK aktif.');
     }, 6000);
   });
 
-  // Anti-AFK Döngüsü (Yalnızca giriş yaptıktan sonra çalışır)
   setInterval(() => {
     if (!isLoggedIn) return;
-
-    // Sadece hafif başını çevirsin (Zıplama GrimAC'ye takılabilir)
     const yaw = Math.random() * Math.PI * 2;
     const pitch = (Math.random() - 0.5) * 0.5;
     bot.look(yaw, pitch, true);
@@ -52,13 +48,14 @@ function createBot() {
 
   bot.on('message', (message) => {
     const msg = message.toString();
-    if (msg.includes('/login')) bot.chat(`/login ${aurasmp123456}`);
-    if (msg.includes('/register')) bot.chat(`/register ${aurasmp123456} ${aurasmp123456}`);
+    // Tırnak işaretleri ve değişken kullanımı düzeltildi:
+    if (msg.includes('/login')) bot.chat(`/login ${BOT_SIFRE}`);
+    if (msg.includes('/register')) bot.chat(`/register ${BOT_SIFRE} ${BOT_SIFRE}`);
   });
 
   bot.on('end', () => {
     isLoggedIn = false;
-    console.log('Bağlantı koptu, tekrar deneniyor...');
+    console.log('Bağlantı koptu, 10 saniye sonra tekrar deneniyor...');
     setTimeout(createBot, 10000);
   });
 
