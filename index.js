@@ -1,55 +1,73 @@
 const mineflayer = require('mineflayer');
 const express = require('express');
 
-// Web sunucusu (Botun 7/24 uyanık kalmasını sağlar)
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('AuraSmpTR AFK Botu Aktif!');
-});
+app.get('/', (req, res) => res.send('AuraSmpTR AFK Botu Aktif!'));
+app.listen(PORT, () => console.log(`Web sunucusu ${PORT} portunda çalışıyor.`));
 
-app.listen(PORT, () => {
-  console.log(`Web sunucusu ${PORT} portunda çalışıyor.`);
-});
-
-// Bot Ayarları
-const botOptions = {
-  host: 'ramp-lexington.tun.ply.gg', // Buraya MC Sunucu IP adresini yaz
-  port: 25565,              // Portun farklıysa değiştir
-  username: 'aurasmptr',  // Botun oyundaki adı
-  version: false            // Sunucu sürümünü otomatik algılar
-};
+// SUNUCU BİLGİLERİ
+const SUNUCU_IP = 'SUNUCU_IP_ADRESI'; // Kendi sunucu IP'ni buraya yaz
+const SUNUCU_PORT = 25565;            // Port farklıysa değiştir
+const BOT_SIFRE = 'AuraBot123456';    // Botun AuthMe şifresi
 
 function createBot() {
   console.log('Bota bağlanılıyor...');
-  const bot = mineflayer.createBot(botOptions);
+  const bot = mineflayer.createBot({
+    host: SUNUCU_IP,
+    port: SUNUCU_PORT,
+    username: 'AuraBot_724',
+    version: false
+  });
 
-  // Oyuna girince çalışacak kısım (Anti-AFK)
+  // Önüne herhangi bir envanter/örs/ekran açılırsa hemen kapatır
+  bot.on('windowOpen', async (window) => {
+    console.log('Ekran/GUI algılandı, kapatılıyor...');
+    try {
+      await bot.closeWindow(window);
+    } catch (err) {
+      // Zaten kapandıysa hata vermesini engelle
+    }
+  });
+
+  // Oyuna katıldığında giriş denemeleri yapar
   bot.on('spawn', () => {
-    console.log('Bot sunucuya başarıyla katıldı!');
-    
-    // Her 30 saniyede bir zıplayarak ve hafif dönerek Anti-AFK yapar
+    console.log('Bot sunucuya katıldı. Giriş komutları gönderiliyor...');
+
+    // Saniyelik aralıklarla komutları gönderir (Önce kayıt, sonra giriş)
+    setTimeout(() => bot.chat(`/register ${BOT_SIFRE} ${BOT_SIFRE}`), 1500);
+    setTimeout(() => bot.chat(`/login ${BOT_SIFRE}`), 3000);
+    setTimeout(() => bot.chat(`/login ${BOT_SIFRE}`), 5000);
+
+    // Anti-AFK (Her 25 saniyede bir zıplar ve bakar)
     setInterval(() => {
       bot.setControlState('jump', true);
-      setTimeout(() => bot.setControlState('jump', false), 500);
-      
-      // Rastgele bakış yönü değiştir
+      setTimeout(() => bot.setControlState('jump', false), 400);
+
       const yaw = Math.random() * Math.PI * 2;
       const pitch = (Math.random() - 0.5) * Math.PI;
       bot.look(yaw, pitch, true);
-    }, 30000);
+    }, 25000);
   });
 
-  // Bot oyundan düşerse veya sunucu kapanırsa otomatik yeniden bağlanır
+  // Sohbetten gelen mesajları dinler
+  bot.on('message', (message) => {
+    const msg = message.toString();
+    // Eğer AuthMe tekrar /login veya /register isterse anında yanıtlar
+    if (msg.includes('/login')) {
+      bot.chat(`/login ${BOT_SIFRE}`);
+    } else if (msg.includes('/register')) {
+      bot.chat(`/register ${BOT_SIFRE} ${BOT_SIFRE}`);
+    }
+  });
+
   bot.on('end', () => {
-    console.log('Botun bağlantısı kesildi. 10 saniye sonra tekrar bağlanıyor...');
+    console.log('Bağlantı koptu. 10 saniye sonra tekrar bağlanılıyor...');
     setTimeout(createBot, 10000);
   });
 
-  bot.on('error', (err) => {
-    console.log('Hata oluştu:', err);
-  });
+  bot.on('error', (err) => console.log('Hata:', err));
 }
 
 createBot();
