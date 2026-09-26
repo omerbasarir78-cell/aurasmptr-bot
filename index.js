@@ -7,10 +7,9 @@ const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('AuraSmpTR AFK Botu Aktif!'));
 app.listen(PORT, () => console.log(`Web sunucusu ${PORT} portunda çalışıyor.`));
 
-// SUNUCU BİLGİLERİ
-const SUNUCU_IP = 'ramp-lexington.tun.ply.gg'; // Kendi sunucu IP'ni buraya yaz
-const SUNUCU_PORT = 25565;            // Port farklıysa değiştir
-const BOT_SIFRE = 'AuraBot123456';    // Botun AuthMe şifresi
+const SUNUCU_IP = 'ramp-lexington.tun.ply.gg'; // IP Adresini yaz
+const SUNUCU_PORT = 25565;
+const BOT_SIFRE = 'AuraBot123456';
 
 function createBot() {
   console.log('Bota bağlanılıyor...');
@@ -21,49 +20,45 @@ function createBot() {
     version: false
   });
 
-  // Önüne herhangi bir envanter/örs/ekran açılırsa hemen kapatır
+  let isLoggedIn = false;
+
   bot.on('windowOpen', async (window) => {
-    console.log('Ekran/GUI algılandı, kapatılıyor...');
-    try {
-      await bot.closeWindow(window);
-    } catch (err) {
-      // Zaten kapandıysa hata vermesini engelle
-    }
+    try { await bot.closeWindow(window); } catch (e) {}
   });
 
-  // Oyuna katıldığında giriş denemeleri yapar
   bot.on('spawn', () => {
-    console.log('Bot sunucuya katıldı. Giriş komutları gönderiliyor...');
+    console.log('Bot sunucuya katıldı. Giriş bekleniyor...');
 
-    // Saniyelik aralıklarla komutları gönderir (Önce kayıt, sonra giriş)
-    setTimeout(() => bot.chat(`/register ${BOT_SIFRE} ${BOT_SIFRE}`), 1500);
-    setTimeout(() => bot.chat(`/login ${BOT_SIFRE}`), 3000);
-    setTimeout(() => bot.chat(`/login ${BOT_SIFRE}`), 5000);
+    // Giriş yapana kadar hareketsiz kalsın
+    setTimeout(() => bot.chat(`/register ${aurasmp123456} ${aurasmp123456}`), 2000);
+    setTimeout(() => bot.chat(`/login ${aurasmp123456}`), 4000);
 
-    // Anti-AFK (Her 25 saniyede bir zıplar ve bakar)
-    setInterval(() => {
-      bot.setControlState('jump', true);
-      setTimeout(() => bot.setControlState('jump', false), 400);
-
-      const yaw = Math.random() * Math.PI * 2;
-      const pitch = (Math.random() - 0.5) * Math.PI;
-      bot.look(yaw, pitch, true);
-    }, 25000);
+    // Giriş yaptıktan 6 saniye sonra Anti-AFK başlat (GrimAC tetiklenmesin)
+    setTimeout(() => {
+      isLoggedIn = true;
+      console.log('Giriş tamamlandı, Anti-AFK aktif.');
+    }, 6000);
   });
 
-  // Sohbetten gelen mesajları dinler
+  // Anti-AFK Döngüsü (Yalnızca giriş yaptıktan sonra çalışır)
+  setInterval(() => {
+    if (!isLoggedIn) return;
+
+    // Sadece hafif başını çevirsin (Zıplama GrimAC'ye takılabilir)
+    const yaw = Math.random() * Math.PI * 2;
+    const pitch = (Math.random() - 0.5) * 0.5;
+    bot.look(yaw, pitch, true);
+  }, 30000);
+
   bot.on('message', (message) => {
     const msg = message.toString();
-    // Eğer AuthMe tekrar /login veya /register isterse anında yanıtlar
-    if (msg.includes('/login')) {
-      bot.chat(`/login ${BOT_SIFRE}`);
-    } else if (msg.includes('/register')) {
-      bot.chat(`/register ${BOT_SIFRE} ${BOT_SIFRE}`);
-    }
+    if (msg.includes('/login')) bot.chat(`/login ${aurasmp123456}`);
+    if (msg.includes('/register')) bot.chat(`/register ${aurasmp123456} ${aurasmp123456}`);
   });
 
   bot.on('end', () => {
-    console.log('Bağlantı koptu. 10 saniye sonra tekrar bağlanılıyor...');
+    isLoggedIn = false;
+    console.log('Bağlantı koptu, tekrar deneniyor...');
     setTimeout(createBot, 10000);
   });
 
