@@ -8,7 +8,7 @@ app.get('/', (req, res) => res.send('AuraSmpTR AFK Botu Aktif!'));
 app.listen(PORT, () => console.log(`Web sunucusu ${PORT} portunda çalışıyor.`));
 
 // SUNUCU BİLGİLERİ
-const SUNUCU_IP = 'SUNUCU_IP_ADRESI'; // Kendi sunucu IP'ni buraya yaz
+const SUNUCU_IP = 'ramp-lexington.tun.ply.gg'; // Kendi sunucu IP'ni buraya yaz
 const SUNUCU_PORT = 25565;            // Port farklıysa değiştir
 const BOT_SIFRE = 'AuraBot123456';    // Botun AuthMe şifresi
 
